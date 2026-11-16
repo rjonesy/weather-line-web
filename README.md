@@ -11,7 +11,7 @@ pnpm install
 pnpm dev
 ```
 
-The development URL includes `/weather-line-web/`. Development uses the local Vite `/api` proxy to reach the public weather service, without broadening the backend’s production browser-origin policy. An optional development API override can be set in `.env.development.local` using `.env.example`. Location access requires the browser’s permission; search for a city when location is unavailable. Current Location displays the street number and street name returned by Google Maps. Addresses stay in memory and never replace the GPS coordinates used for weather or get written into saved locations.
+The development URL includes `/weather-line-web/`. Development uses the local Vite `/api` proxy to reach the public weather service, without broadening the backend’s production browser-origin policy. An optional development API override can be set in `.env.development.local` using `.env.example`. Location access requires the browser’s permission; search for a city when location is unavailable. Current Location displays the street number and street name returned by Apple Maps. Addresses stay in memory and never replace the GPS coordinates used for weather or get written into saved locations.
 
 ## Build and check
 
@@ -36,4 +36,6 @@ Cities and preferences are saved locally in the current browser or installed app
 
 This is a static frontend. Live weather, city search, street addresses, alerts and monthly statistics depend on the separately hosted API at `https://weather-line-recreated.ryan-jones-3545.chatgpt.site`. That backend must remain available and allow the GitHub Pages origin through CORS. The production public API origin is configured in `.env.production`; development can override its proxy default in `.env.development.local` using `VITE_WEATHER_API_URL`.
 
-The API URL is public configuration. WeatherKit signing credentials and the server-only `GOOGLE_MAPS_API_KEY` belong on the backend and are not included in this repository. Enable Google Maps Geocoding API for that key; a WeatherKit key cannot authorize address lookups. Address lookups use POST to `/api/address` with no-store responses; an unavailable address does not block weather. A small Google Maps attribution accompanies a successfully resolved address on the current-location tile and city screen. Settings and the saved-location menu do not display address data. Changing a Vite environment value requires rebuilding the frontend.
+The API URL is public configuration. Apple WeatherKit and Apple Maps signing credentials belong on the backend and are not included in this repository. The backend’s existing Apple signing key must have MapKit JS enabled for street-address lookup. Separate optional server-side Apple Maps credentials can also be configured. Address lookups use POST to `/api/address` with no-store responses; an unavailable address does not block weather. Settings and the saved-location menu do not display address data. Changing a Vite environment value requires rebuilding the frontend.
+
+Prototype follow-up: the user has deferred the corresponding Apple map display for street-address results until later. The current prototype shows street text only.

@@ -9,10 +9,10 @@ import {conditionColor,conditionName,type Forecast,type Place} from '@/lib/weath
 import type {Preferences} from '@/lib/preferences';
 import {airTemperature} from '@/lib/temperature';
 
-type Props={hasStreetAddress?:boolean;place:Place;prefs:Preferences;view:'hourly'|'daily';refreshId?:string;onOpen:(place:Place,keyboard?:boolean)=>void};
+type Props={place:Place;prefs:Preferences;view:'hourly'|'daily';refreshId?:string;onOpen:(place:Place,keyboard?:boolean)=>void};
 type State={key:string;forecast?:Forecast;busy:boolean;error:string;isOffline:boolean};
 
-export function CityTile({place,hasStreetAddress=false,prefs,view,refreshId,onOpen}:Props){
+export function CityTile({place,prefs,view,refreshId,onOpen}:Props){
  const key=placeForecastKey(place),gesture=useRef({x:0,y:0,moved:false});
  const[state,setState]=useState<State>({key,busy:true,error:'',isOffline:false});
  useEffect(()=>{
@@ -33,7 +33,7 @@ export function CityTile({place,hasStreetAddress=false,prefs,view,refreshId,onOp
   onPointerCancel={()=>{gesture.current.moved=true;}}
   onClick={event=>{if(event.detail===0||!gesture.current.moved)onOpen(place,event.detail===0);}}
   onKeyDown={event=>{if(event.target===event.currentTarget&&(event.key==='Enter'||event.key===' ')){event.preventDefault();onOpen(place,true);}}}>
-  <header className="location-heading"><div className="location-title"><h2>{place.name}</h2><LocationSubtitle place={place} hasStreetAddress={hasStreetAddress}/></div><div className="current-temperature" aria-hidden="true" style={{color:data?conditionColor(data.current.conditionCode,data.current.daylight!==false,true):'var(--muted)'}}>{data&&<WeatherIcon code={data.current.conditionCode} daylight={data.current.daylight} size={35}/>}<span>{formatted}</span></div></header>
+  <header className="location-heading"><div className="location-title"><h2>{place.name}</h2><LocationSubtitle place={place}/></div><div className="current-temperature" aria-hidden="true" style={{color:data?conditionColor(data.current.conditionCode,data.current.daylight!==false,true):'var(--muted)'}}>{data&&<WeatherIcon code={data.current.conditionCode} daylight={data.current.daylight} size={35}/>}<span>{formatted}</span></div></header>
   {data?<><div aria-hidden="true"><ForecastGraph data={data} view={view} index={0} onSelect={()=>{}} prefs={prefs} timezone={place.timezone} nights={[]} compact/></div>{(current?.isOffline||current?.error)&&<p className="tile-status">Saved forecast · Open to refresh</p>}</>:<p className="tile-placeholder">{current?.error?'Forecast unavailable · Tap to retry':'Getting your forecast…'}</p>}
  </section>;
 }
