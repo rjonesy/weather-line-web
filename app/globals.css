@@ -80,3 +80,5 @@
 .location-label{display:inline-flex;align-items:center;gap:2px;min-width:0;overflow-wrap:anywhere}
 
 .summary-notice{display:grid}.summary-notice>p{grid-area:1/1}.summary-notice-sizing{visibility:hidden;pointer-events:none}
+
+.location-status{padding:0 8px 14px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;overflow-wrap:anywhere}.location-status p{max-width:38ch;margin:0 auto}.location-status-actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:0 16px}.location-status .text-button{font-size:13px}

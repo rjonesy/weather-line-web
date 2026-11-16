@@ -45,3 +45,8 @@ export function removeSavedPlace(places: readonly Place[], id: string): Place[] 
 export function updateCurrentLocation(places: readonly Place[], current: Place): Place[] {
   return places.some(place => place.id === current.id) ? upsertSavedPlace(places, current) : [...places];
 }
+
+/** A failed first GPS attempt may retry, but an intentionally empty/edited list may not. */
+export function shouldSeedCurrentLocation(storedPlaces:string|null, places:readonly Place[], pending:boolean):boolean {
+  return storedPlaces===null || (pending && places.some(place=>place.id===DEFAULT_PLACE.id) && !places.some(place=>place.id==='current-location'));
+}
