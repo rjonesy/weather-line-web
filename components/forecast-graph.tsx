@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useId,useRef,useState} from 'react';
+import {useEffect,useLayoutEffect,useId,useRef,useState} from 'react';
 import {conditionColor,conditionName,type Conditions,type Day,type Forecast} from '@/lib/weather';
 import {curveSegments,curveRuns} from '@/lib/curve';
 import {WeatherGlyph} from '@/components/weather-icons';
@@ -15,14 +15,14 @@ export function ForecastGraph({data,view,index,onSelect,prefs,timezone,nights,co
  const date=useDate(timezone),scroll=useRef<HTMLDivElement>(null),list=view==='daily'?data.daily:data.hourly.slice(0,72);
  const hourLabel=(time:string,i:number)=>i===0?'NOW':Number(date(time,{hour:'numeric',hourCycle:'h23'}))===0?date(time,{weekday:'short'}):date(time,{hour:'numeric',hour12:true}).replace(/\s[AP]M/,'');
  const temp=(n:number|undefined)=>n===undefined?'—':String(Math.round(prefs.unit==='F'?n*9/5+32:n)),value=(d:Conditions)=>airTemperature(d,prefs.feelsLike);
- const width=view==='daily'?420:list.length*chartWidth/HOURLY_COLUMNS,height=compact?175:view==='daily'?350:330,dx=width/list.length;
+ const width=view==='daily'?chartWidth:list.length*chartWidth/HOURLY_COLUMNS,height=compact?175:330,dx=width/list.length;
  const highs=list.map(d=>view==='daily'?dailyTemperatures(d as Day,prefs.feelsLike).high:value(d)),lows=view==='daily'?list.map(d=>dailyTemperatures(d as Day,prefs.feelsLike).low):[];
  const available=[...highs,...lows].filter((value):value is number=>value!==undefined),max=available.length?Math.max(...available):1,min=available.length?Math.min(...available):0,range=Math.max(max-min,8),y=(t:number)=>65+(max-t)/range*(compact?50:180);
  const points=highs.map((t,i)=>t===undefined?null:{x:dx*(i+.5),y:y(t)}),lower=lows.map((t,i)=>t===undefined?null:{x:dx*(i+1),y:y(t)}).slice(0,-1),labelY=height-(compact?16:31);
  const highSegments=curveRuns(points).flatMap(run=>curveSegments(run.points).map((segment,i)=>({...segment,index:run.startIndex+i})));
  const lowSegments=curveRuns(lower).flatMap(run=>curveSegments(run.points).map((segment,i)=>({...segment,index:run.startIndex+i}))); 
  const spoken=(n:number|undefined)=>n===undefined?'unavailable':`${temp(n)} degrees`;
- useEffect(()=>{const el=scroll.current;if(!el)return;const observer=new ResizeObserver(([entry])=>{if(entry.contentRect.width>0)setChartWidth(entry.contentRect.width);});observer.observe(el);return()=>observer.disconnect();},[]);
+ useLayoutEffect(()=>{const el=scroll.current;if(!el)return;const measured=el.getBoundingClientRect().width;if(measured>0)setChartWidth(measured);const observer=new ResizeObserver(([entry])=>{if(entry.contentRect.width>0)setChartWidth(entry.contentRect.width);});observer.observe(el);return()=>observer.disconnect();},[]);
  useEffect(()=>{if(scroll.current)scroll.current.scrollLeft=0;},[view]);
  useEffect(()=>{const el=scroll.current;if(!el||view!=='hourly'||compact)return;const left=index*chartWidth/HOURLY_COLUMNS,right=(index+1)*chartWidth/HOURLY_COLUMNS;if(left<el.scrollLeft)el.scrollLeft=left;else if(right>el.scrollLeft+el.clientWidth)el.scrollLeft=right-el.clientWidth;},[chartWidth,index,view,compact]);
  const nightCode=(i:number)=>prefs.nightConditions?(nights[i]?.complete?nights[i].conditionCode||'NotAvailable':'NotAvailable'):data.daily[i].conditionCode;

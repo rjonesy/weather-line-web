@@ -24,6 +24,8 @@ pnpm preview
 
 `pnpm build:pages` builds the production app, then copies the complete static output into `docs/` and adds `.nojekyll`. Commit `docs/` alongside the source. In the public personal repository’s **Settings → Pages**, choose **Deploy from a branch**, then **main** and **/docs**. No GitHub Actions workflow or app sign-in is required. After each app change, run `pnpm build:pages` again and commit the updated source and `docs/` together.
 
+Hourly and Daily use matching chart heights, icon and graph-label sizes, selection-summary typography, and detail placement at the same viewport size. Switching modes preserves the compact tile and expanded forecast layout.
+
 The live app URL is `https://rjonesy.github.io/weather-line-web/`. The intermediate Vite build is also available in `dist/` for `pnpm preview`. If the repository path changes, update `base` in `vite.config.ts` and the manifest’s `id`, `start_url`, `scope` and icon paths together.
 
 ## iPhone Home Screen
