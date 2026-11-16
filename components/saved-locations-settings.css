@@ -1,0 +1,16 @@
+.saved-locations-settings{margin-top:26px}
+.saved-locations-settings h2{font-size:18px;font-weight:600;letter-spacing:-.025em}
+.saved-locations-note{margin:7px 0 14px;color:var(--muted);font-size:12px;line-height:1.5}
+.saved-locations-list{list-style:none;margin:0;padding:0 12px;background:var(--background);border-radius:11px}
+.saved-locations-list>li{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;min-height:70px;padding:9px 0}
+.saved-locations-list>li+li{border-top:1px solid var(--rule)}
+.saved-locations-name{min-width:0;overflow-wrap:anywhere}
+.saved-locations-name strong{display:block;font-size:15px;font-weight:500;line-height:1.35}
+.saved-locations-name>span{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.4}
+.saved-locations-actions{display:flex;flex:none;align-items:center}
+.saved-locations-actions>button{display:flex;align-items:center;justify-content:center;width:44px;min-width:44px;min-height:44px;color:var(--accent-ink);border-radius:7px}
+.saved-locations-actions>button:last-child{color:var(--muted)}
+.saved-locations-actions>button[aria-disabled=true]{opacity:.35;cursor:default}
+.saved-locations-actions>button[aria-disabled=true]:hover{filter:none}
+.saved-locations-empty{padding:17px 12px;background:var(--background);border-radius:11px;color:var(--muted);font-size:14px;line-height:1.5}
+.saved-locations-add{margin-top:4px;gap:7px}

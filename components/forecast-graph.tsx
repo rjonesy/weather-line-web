@@ -1,0 +1,39 @@
+'use client';
+import {useEffect,useId,useRef,useState} from 'react';
+import {conditionColor,conditionName,type Conditions,type Day,type Forecast} from '@/lib/weather';
+import {curveSegments,curveRuns} from '@/lib/curve';
+import {WeatherGlyph} from '@/components/weather-icons';
+import type {Preferences as Prefs} from '@/lib/preferences';
+import type {NightForecast} from '@/lib/night-forecast';
+import {airTemperature,dailyTemperatures} from '@/lib/temperature';
+type View='hourly'|'daily';
+const HOURLY_COLUMNS=10;
+function useDate(timezone:string){return(time:string,options:Intl.DateTimeFormatOptions)=>new Intl.DateTimeFormat('en-US',{timeZone:timezone,...options}).format(new Date(time));}
+export function ForecastGraph({data,view,index,onSelect,prefs,timezone,nights,compact=false}:{data:Forecast;view:View;index:number;onSelect:(i:number)=>void;prefs:Prefs;timezone:string;nights:NightForecast[];compact?:boolean}){
+ const[chartWidth,setChartWidth]=useState(420);
+ const selectionId=`selection-${useId().replace(/:/g,'')}`;
+ const date=useDate(timezone),scroll=useRef<HTMLDivElement>(null),list=view==='daily'?data.daily:data.hourly.slice(0,72);
+ const hourLabel=(time:string,i:number)=>i===0?'NOW':Number(date(time,{hour:'numeric',hourCycle:'h23'}))===0?date(time,{weekday:'short'}):date(time,{hour:'numeric',hour12:true}).replace(/\s[AP]M/,'');
+ const temp=(n:number|undefined)=>n===undefined?'—':String(Math.round(prefs.unit==='F'?n*9/5+32:n)),value=(d:Conditions)=>airTemperature(d,prefs.feelsLike);
+ const width=view==='daily'?420:list.length*chartWidth/HOURLY_COLUMNS,height=compact?175:view==='daily'?350:330,dx=width/list.length;
+ const highs=list.map(d=>view==='daily'?dailyTemperatures(d as Day,prefs.feelsLike).high:value(d)),lows=view==='daily'?list.map(d=>dailyTemperatures(d as Day,prefs.feelsLike).low):[];
+ const available=[...highs,...lows].filter((value):value is number=>value!==undefined),max=available.length?Math.max(...available):1,min=available.length?Math.min(...available):0,range=Math.max(max-min,8),y=(t:number)=>65+(max-t)/range*(compact?50:180);
+ const points=highs.map((t,i)=>t===undefined?null:{x:dx*(i+.5),y:y(t)}),lower=lows.map((t,i)=>t===undefined?null:{x:dx*(i+1),y:y(t)}).slice(0,-1),labelY=height-(compact?16:31);
+ const highSegments=curveRuns(points).flatMap(run=>curveSegments(run.points).map((segment,i)=>({...segment,index:run.startIndex+i})));
+ const lowSegments=curveRuns(lower).flatMap(run=>curveSegments(run.points).map((segment,i)=>({...segment,index:run.startIndex+i}))); 
+ const spoken=(n:number|undefined)=>n===undefined?'unavailable':`${temp(n)} degrees`;
+ useEffect(()=>{const el=scroll.current;if(!el)return;const observer=new ResizeObserver(([entry])=>{if(entry.contentRect.width>0)setChartWidth(entry.contentRect.width);});observer.observe(el);return()=>observer.disconnect();},[]);
+ useEffect(()=>{if(scroll.current)scroll.current.scrollLeft=0;},[view]);
+ useEffect(()=>{const el=scroll.current;if(!el||view!=='hourly'||compact)return;const left=index*chartWidth/HOURLY_COLUMNS,right=(index+1)*chartWidth/HOURLY_COLUMNS;if(left<el.scrollLeft)el.scrollLeft=left;else if(right>el.scrollLeft+el.clientWidth)el.scrollLeft=right-el.clientWidth;},[chartWidth,index,view,compact]);
+ const nightCode=(i:number)=>prefs.nightConditions?(nights[i]?.complete?nights[i].conditionCode||'NotAvailable':'NotAvailable'):data.daily[i].conditionCode;
+ const nightDescription=(i:number)=>prefs.nightConditions?`, 10 PM to 5 AM night ${nights[i]?.complete?conditionName(nights[i].conditionCode||'NotAvailable'):'forecast unavailable'}`:'';
+ const selectPointer=(e:React.PointerEvent<SVGSVGElement>)=>{const box=e.currentTarget.getBoundingClientRect();onSelect(Math.max(0,Math.min(list.length-1,Math.floor((e.clientX-box.left)/box.width*width/dx))));};
+ return <div className={`chart-scroll ${view} ${compact?'compact':''}`} ref={scroll} aria-label={compact?`${view} forecast preview`:`${view} forecast. Select a point for details.`}><svg className="forecast-chart" viewBox={`0 0 ${width} ${height}`} style={view==='hourly'?{width,minWidth:width}:undefined} role="group" onPointerDown={compact?undefined:selectPointer} onPointerUp={e=>{const active=document.activeElement;if(active instanceof SVGElement&&e.currentTarget.contains(active))active.blur();}} onPointerMove={e=>{if(!compact&&e.buttons===1)selectPointer(e);}}>
+ <defs><linearGradient id={selectionId} x1="0" y1="0" x2="0" y2="1"><stop stopColor={conditionColor((list[index]||list[0]).conditionCode,(list[index]||list[0]).daylight!==false)} stopOpacity="0"/><stop offset="1" stopColor={conditionColor((list[index]||list[0]).conditionCode,(list[index]||list[0]).daylight!==false)} stopOpacity="var(--highlight-opacity,.18)"/></linearGradient></defs>
+ {!compact&&<rect className="selection-highlight" x={index*dx} y="0" width={dx} height={height} fill={`url(#${selectionId})`}/>}
+ {highSegments.map(segment=><path key={segment.index} d={segment.path} fill="none" stroke={conditionColor(list[segment.index].conditionCode,list[segment.index].daylight!==false)} strokeWidth={compact?2:2.2} strokeLinecap="round"/>)}
+ {!compact&&lowSegments.map(segment=><path key={segment.index} d={segment.path} data-night-condition={nightCode(segment.index)} fill="none" stroke={conditionColor(nightCode(segment.index),false,false,true)} strokeWidth="2.2" strokeLinecap="round"/>)}
+ {points.map((p,i)=><g key={i}><text aria-hidden="true" x={dx*(i+.5)} y={p?p.y-(compact?17:21):85} textAnchor="middle" className="graph-temperature" fill={conditionColor(list[i].conditionCode,list[i].daylight!==false,true)}>{temp(highs[i])}</text>{p&&<WeatherGlyph code={list[i].conditionCode} daylight={list[i].daylight!==false} x={p.x-(compact?11:12)} y={p.y-(compact?11:12)} size={compact?22:24}/>}<text x={dx*(i+.5)} y={labelY} className="graph-time" textAnchor="middle">{view==='daily'?date(list[i].time,{weekday:'narrow'}):hourLabel(list[i].time,i)}</text>{!compact&&<text x={dx*(i+.5)} y={height-10} className="graph-secondary" textAnchor="middle">{view==='daily'?date(list[i].time,{day:'numeric'}):date(list[i].time,{hour:'numeric',hour12:true}).includes('AM')?'AM':'PM'}</text>}{!compact&&<rect x={i*dx} y="0" width={dx} height={height} fill="transparent" className="chart-target" role="button" data-index={i} tabIndex={i===index?0:-1} aria-label={`${date(list[i].time,view==='daily'?{weekday:'long',month:'short',day:'numeric'}:{weekday:'short',hour:'numeric'})}, ${prefs.feelsLike?'Feels Like ':''}${view==='daily'?`high ${spoken(highs[i])}, low ${spoken(lows[i])}`:spoken(highs[i])}, ${conditionName(list[i].conditionCode)}${view==='daily'?nightDescription(i):''}`} aria-pressed={i===index} onClick={e=>{onSelect(i);if(e.detail>0)e.currentTarget.blur();}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(i);}if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const next=Math.max(0,Math.min(list.length-1,index+(e.key==='ArrowRight'?1:-1)));onSelect(next);const point=e.currentTarget.ownerSVGElement?.querySelector<SVGRectElement>(`rect[data-index="${next}"]`);point?.focus();point?.scrollIntoView({block:'nearest',inline:'nearest'});}}}/>}</g>)}
+ {!compact&&lower.map((p,i)=><g key={i} pointerEvents="none" aria-hidden="true" data-night-status={prefs.nightConditions?(nights[i]?.complete?'complete':'unavailable'):'standard'} data-night-condition={nightCode(i)}>{p&&<WeatherGlyph code={nightCode(i)} daylight={false} nightTrack x={p.x-11} y={p.y-11} size={22}/>}<text x={dx*(i+1)} y={p?p.y+30:height-60} className="graph-temperature" fill={conditionColor(nightCode(i),false,true,true)} textAnchor="middle">{temp(lows[i])}</text></g>)}
+ </svg></div>;
+}
