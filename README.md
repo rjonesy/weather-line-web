@@ -13,7 +13,7 @@ pnpm dev
 
 The development URL includes `/weather-line-web/`. Development uses the local Vite `/api` proxy to reach the public weather service, without broadening the backend’s production browser-origin policy. An optional development API override can be set in `.env.development.local` using `.env.example`. Location access requires the browser’s permission; search for a city when location is unavailable. Current Location displays the street number and street name returned by Apple Maps. Addresses stay in memory and never replace the GPS coordinates used for weather or get written into saved locations.
 
-Location detection tries a fresh precise position, then a recent or coarse position if the provider times out or is unavailable. The main screen shows progress and a retry action; permission errors explain how to allow location. A failed first attempt can recover after reload, while removed locations and saved-city edits stay respected. The browser and operating system control location permission. City search remains available when location access is blocked.
+Location detection tries a fresh precise position, then a recent or coarse position if the provider times out or is unavailable. Location progress and retry stay inside Locations; permission errors explain how to allow location. A failed first attempt can recover after reload, while removed locations and saved-city edits stay respected. The browser and operating system control location permission. City search remains available when location access is blocked.
 
 ## Build and check
 
