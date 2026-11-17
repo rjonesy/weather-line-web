@@ -19,7 +19,7 @@ function localMonth(timezone:string){
  catch{return new Date().getUTCMonth()+1;}
 }
 function validClimate(data:MonthlyClimate){
- return data?.source==='weatherkit'&&Array.isArray(data.months)&&data.months.length===12&&new Set(data.months.map(m=>m?.month)).size===12&&data.months.every(m=>m&&Number.isInteger(m.month)&&m.month>=1&&m.month<=12&&Number.isFinite(m.temperatureMax)&&Number.isFinite(m.temperatureMin)&&m.temperatureMax>=m.temperatureMin&&(m.precipitationAmount===undefined||(Number.isFinite(m.precipitationAmount)&&m.precipitationAmount>=0)));
+ return data?.source==='weatherkit'&&Array.isArray(data.months)&&data.months.length===12&&new Set(data.months.map(m=>m?.month)).size===12&&data.months.every(m=>m&&Number.isInteger(m.month)&&m.month>=1&&m.month<=12&&Number.isFinite(m.temperatureMax)&&Number.isFinite(m.temperatureMin)&&m.temperatureMax>=m.temperatureMin&&(m.precipitationAmount===undefined||(Number.isFinite(m.precipitationAmount)&&m.precipitationAmount>=0))&&(m.precipitationDays===undefined||(Number.isFinite(m.precipitationDays)&&m.precipitationDays>=0&&m.precipitationDays<=31)));
 }
 
 export function MonthlyAverages({place,source,prefs,refreshId}:Props){
@@ -65,6 +65,7 @@ function MonthlyAveragesForPlace({place,source,prefs,refreshId}:Props){
  const rainfall=(value:number)=>`${(prefs.rain==='in'?value/25.4:value).toFixed(prefs.rain==='in'?2:1)} ${prefs.rain}`;
  const rainfallSpoken=(value:number)=>`${(prefs.rain==='in'?value/25.4:value).toFixed(prefs.rain==='in'?2:1)} ${prefs.rain==='in'?'inches':'millimeters'}`;
  const temperatureUnit=prefs.unit==='F'?'Fahrenheit':'Celsius';
+ const precipitationDays=(value:number)=>new Intl.NumberFormat('en-US',{maximumFractionDigits:1}).format(value);
  const selected=months?.find(m=>m.month===month)||months?.[0];
  const hasRain=Boolean(months?.some(m=>m.precipitationAmount!==undefined));
  const width=420,height=hasRain?330:280,step=width/12;
@@ -81,17 +82,17 @@ function MonthlyAveragesForPlace({place,source,prefs,refreshId}:Props){
   graph.current?.querySelector<SVGRectElement>(`[data-month="${months[next].month}"]`)?.focus();
  };
  return <section className="monthly-section" aria-labelledby={headingId} aria-busy={loading||refreshing}>
-  <h2 id={headingId}>{prefs.feelsLike?'Actual Monthly Averages':'Monthly Averages'}</h2>
-  <p className="monthly-place">{source==='reference'?'Austin, TX · Original reference':`${place.name} · Typical monthly weather`}</p>
+  <h2 id={headingId}>Monthly Averages</h2>
+  <p className="monthly-place">{source==='reference'?'Austin, TX · Original reference':place.name}</p>
   {loading?<p className="monthly-status" role="status">Loading monthly averages…</p>:!months?<div className="monthly-status"><p role="alert">Couldn’t load monthly averages.</p><button ref={retryButton} className="text-button" onClick={event=>{retryFocus.current=event.detail===0;setLoad({key,status:'loading'});setRetry(value=>value+1);}}>Try again</button></div>:<>
    <p className="monthly-keyboard-help" id={helpId}>Use the left and right arrow keys to select a month. Home selects January and End selects December.</p>
-   <div className="monthly-chart"><svg ref={graph} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`${prefs.feelsLike?'Actual monthly':'Monthly'} average ${hasRain?'temperatures and precipitation':'high and low temperatures'}`} aria-describedby={helpId}>
+   <div className="monthly-chart"><svg ref={graph} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`Monthly average ${hasRain?'temperatures and precipitation':'high and low temperatures'}`} aria-describedby={helpId}>
     <rect x={(month-1)*step} y="0" width={step} height={height} fill="var(--selection)" aria-hidden="true"/>
     <path d={curve(months.map((m,i)=>({x:x(i),y:y(m.temperatureMax)})))} stroke="var(--sun)" fill="none" strokeWidth="2.2" aria-hidden="true"/>
     <path d={curve(months.map((m,i)=>({x:x(i),y:y(m.temperatureMin)})))} stroke="var(--night)" fill="none" strokeWidth="2.2" aria-hidden="true"/>
     {months.map((m,i)=>{
      const rainHeight=(m.precipitationAmount||0)/rainMaximum*42;
-     const label=`${monthNames[m.month-1]}, average high ${temperature(m.temperatureMax)} degrees ${temperatureUnit}, average low ${temperature(m.temperatureMin)} degrees ${temperatureUnit}${m.precipitationAmount===undefined?'':`, average precipitation ${rainfallSpoken(m.precipitationAmount)}`}`;
+     const label=`${monthNames[m.month-1]}, average high ${temperature(m.temperatureMax)} degrees ${temperatureUnit}, average low ${temperature(m.temperatureMin)} degrees ${temperatureUnit}${m.precipitationAmount===undefined?'':`, average precipitation ${rainfallSpoken(m.precipitationAmount)}`}${m.precipitationDays===undefined?'':`, average precipitation days ${precipitationDays(m.precipitationDays)}`}`;
      return <g key={m.month}>
       <circle cx={x(i)} cy={y(m.temperatureMax)} r="5.5" fill="var(--sun)" stroke="var(--surface)" aria-hidden="true"/>
       <text x={x(i)} y={y(m.temperatureMax)-14} textAnchor="middle" fill="var(--sun-ink)" className="graph-temperature" aria-hidden="true">{temperature(m.temperatureMax)}</text>
@@ -103,9 +104,8 @@ function MonthlyAveragesForPlace({place,source,prefs,refreshId}:Props){
      </g>;
     })}
    </svg></div>
-   {selected&&<div className="monthly-selection" aria-live="polite" aria-atomic="true"><h3>{monthNames[selected.month-1]}</h3><dl className="monthly-values"><div><dt>Average high</dt><dd>{temperature(selected.temperatureMax)}°</dd></div><div><dt>Average low</dt><dd>{temperature(selected.temperatureMin)}°</dd></div>{selected.precipitationAmount!==undefined&&<div><dt>Average precipitation</dt><dd>{rainfall(selected.precipitationAmount)}</dd></div>}</dl></div>}
+   {selected&&<div className="monthly-selection" aria-live="polite" aria-atomic="true"><h3>{monthNames[selected.month-1]}</h3><dl className="monthly-values"><div><dt>Average high</dt><dd>{temperature(selected.temperatureMax)}°</dd></div><div><dt>Average low</dt><dd>{temperature(selected.temperatureMin)}°</dd></div>{selected.precipitationAmount!==undefined&&<div><dt>Average precipitation</dt><dd>{rainfall(selected.precipitationAmount)}</dd></div>}<div><dt title="Expected precipitation days, based on daily historical averages.">Average Precip Days</dt><dd aria-label={selected.precipitationDays===undefined?'Average precipitation days unavailable':`${precipitationDays(selected.precipitationDays)} days`}>{selected.precipitationDays===undefined?'—':precipitationDays(selected.precipitationDays)}</dd></div></dl></div>}
    {refreshFailed&&<p className="monthly-note" role="status">Couldn’t refresh. Showing saved monthly averages. <button ref={retryButton} className="text-button" onClick={event=>{retryFocus.current=event.detail===0;setRetry(value=>value+1);}}>Try again</button></p>}
-   <p className="monthly-note">{source==='reference'?'Historical values from Weather Line’s original Austin screen.':'Long-term monthly averages from Apple Weather.'}{prefs.feelsLike?' Historical Feels Like averages aren’t available.':''}</p>
   </>}
  </section>;
 }
