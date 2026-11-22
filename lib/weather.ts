@@ -2,15 +2,14 @@ export type Place = { id: string; name: string; region: string; latitude: number
 export type Conditions = { time: string; conditionCode: string; temperature: number; temperatureApparent?: number; temperatureDewPoint?: number; humidity?: number; cloudCover?: number; windSpeed?: number; windGust?: number; windDirection?: number; uvIndex?: number; precipitationChance?: number; precipitationAmount?: number; daylight?: boolean };
 export type Day = Conditions & { temperatureMax: number; temperatureMin: number; temperatureApparentMax?: number; temperatureApparentMin?: number; temperatureApparentSource?: 'hourly'; temperatureDewPointAverage?: number; temperatureDewPointAverageSource?: 'hourly-daytime'; forecastEnd?: string; sunrise?: string; sunset?: string; summary?: string; daytimeConditionCode?: string; overnightConditionCode?: string };
 export type WeatherAlert = {id:string;summary:string;detailsUrl?:string;severity?:string;effectiveTime?:string;expireTime?:string;issuedTime?:string;source?:string;areaName?:string};
-export type MonthlyClimate = {source:'weatherkit'|'reference';fetchedAt:string;months:{month:number;temperatureMax:number;temperatureMin:number;precipitationAmount?:number;precipitationDays?:number}[]};
-export type Forecast = { source: 'weatherkit' | 'reference'; fetchedAt: string; current: Conditions; hourly: Conditions[]; daily: Day[]; minutes?: { startTime: string; precipitationIntensity: number; precipitationChance: number }[]; alerts?: WeatherAlert[]; alertsStatus?:'available'|'unavailable'|'error'; attribution?: { legalPageUrl?: string; logoLightURL?: string; logoDarkURL?: string } };
+export type MonthlyClimate = {source:'weatherkit';fetchedAt:string;months:{month:number;temperatureMax:number;temperatureMin:number;precipitationAmount?:number;precipitationDays?:number}[]};
+export type Forecast = { source: 'weatherkit'; fetchedAt: string; current: Conditions; hourly: Conditions[]; daily: Day[]; minutes?: { startTime: string; precipitationIntensity: number; precipitationChance: number }[]; alerts?: WeatherAlert[]; alertsStatus?:'available'|'unavailable'|'error'; attribution?: { legalPageUrl?: string; logoLightURL?: string; logoDarkURL?: string } };
 export function forecastDayForHour(days:Day[],time:string,timezone:string) {
   const date=new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'});
   const key=date.format(new Date(time));
   return days.find(d=>date.format(new Date(d.time))===key);
 }
 export const DEFAULT_PLACE: Place = { id: 'new-york', name: 'New York', region: 'New York, United States', latitude: 40.7128, longitude: -74.006, timezone: 'America/New_York', countryCode: 'US' };
-export const REFERENCE_PLACE: Place = {...DEFAULT_PLACE, id: 'reference-new-york'};
 export function conditionName(code: string) { return code.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, s => s.toUpperCase()); }
 export function conditionIcon(code: string, daylight = true) {
   if (/^(NotAvailable|Unavailable|Unknown)$/i.test(code)) return 'NotAvailable';
@@ -42,11 +41,3 @@ export function conditionColor(code: string, daylight = true, ink = false, night
   const color=/^(Hurricane|Tornado|Hot)/.test(icon)?'hot':/^Rain/.test(icon)?'rain':/^(Windy|Snow|Sleet|Hail|Icy)/.test(icon)?'wind':/^(Cloudy|Fog)/.test(icon)?'cloud':/^Night/.test(icon)?'night':'sun';
   return `var(--${color}${ink?'-ink':''})`;
 }
-const c = (f: number) => (f - 32) * 5 / 9;
-// Illustrative New York values for exploring the design, never live observations.
-export const REFERENCE: Forecast = {
-  source: 'reference', fetchedAt: '2020-07-18T13:00:00Z',
-  current: { time: '2020-07-18T13:00:00Z', conditionCode: 'PartlyCloudy', temperature: c(62), temperatureApparent: c(62), temperatureDewPoint: c(57), humidity: .76, cloudCover: .24, windSpeed: 12.9, windDirection: 315, uvIndex: 3, daylight: true },
-  daily: [84,82,79,80,79,80,82,83,84,85].map((t, i) => ({ time: new Date(Date.UTC(2020,6,18+i,16)).toISOString(), conditionCode: [0,5].includes(i) ? 'PartlyCloudy' : 'Clear', summary:i===0?'Some clouds, then sunshine':undefined, temperature:c(t), temperatureMax:c(t), temperatureMin:c([58,57,57,55,56,55,56,57,57,58][i]), temperatureDewPoint:c(57), humidity:.64, cloudCover:.24, windSpeed:12.9, windGust:19.3, windDirection:315, uvIndex:11, precipitationChance:0, precipitationAmount:0, daylight:true, sunrise:new Date(Date.UTC(2020,6,18+i,9,40)).toISOString(), sunset:new Date(Date.UTC(2020,6,19+i,0,25)).toISOString() })),
-  hourly: Array.from({length:72},(_,i)=> { const h=(9+i)%24; const t=63+19*Math.sin((h-7)/24*Math.PI*2); return { time:new Date(Date.UTC(2020,6,18,13+i)).toISOString(),conditionCode:h<7||h>=20?'Clear':h<11?'PartlyCloudy':'Clear',temperature:c(t),temperatureApparent:c(t-1),temperatureDewPoint:c(57),humidity:.76-(t-63)/100,cloudCover:h<11?.24:.08,windSpeed:12.9,windDirection:315,uvIndex:h>7&&h<20?Math.round(10*Math.sin((h-7)/13*Math.PI)):0,precipitationChance:0,precipitationAmount:0,daylight:h>=6&&h<20 }; }),
-};

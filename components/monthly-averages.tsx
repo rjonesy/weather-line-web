@@ -6,13 +6,9 @@ import {apiUrl} from '@/lib/api-client';
 import type {MonthlyClimate,Place} from '@/lib/weather';
 
 type Preferences={unit:'F'|'C';rain:'in'|'mm';feelsLike:boolean};
-type Props={place:Place;source:'weatherkit'|'reference';prefs:Preferences;refreshId?:string};
-type Month=MonthlyClimate['months'][number];
+type Props={place:Place;prefs:Preferences;refreshId?:string};
 type LoadState={key:string;status:'loading'|'ready'|'error';data?:MonthlyClimate};
 const monthNames=Array.from({length:12},(_,i)=>new Intl.DateTimeFormat('en',{month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(2020,i,1))));
-const referenceHigh=[59,63,70,77,84,91,95,96,88,79,68,60];
-const referenceLow=[42,46,52,58,66,72,74,75,71,61,52,45];
-const referenceMonths:Month[]=referenceHigh.map((high,i)=>({month:i+1,temperatureMax:(high-32)*5/9,temperatureMin:(referenceLow[i]-32)*5/9}));
 
 function localMonth(timezone:string){
  try{return Number(new Intl.DateTimeFormat('en',{month:'numeric',timeZone:timezone}).format(new Date()));}
@@ -22,19 +18,19 @@ function validClimate(data:MonthlyClimate){
  return data?.source==='weatherkit'&&Array.isArray(data.months)&&data.months.length===12&&new Set(data.months.map(m=>m?.month)).size===12&&data.months.every(m=>m&&Number.isInteger(m.month)&&m.month>=1&&m.month<=12&&Number.isFinite(m.temperatureMax)&&Number.isFinite(m.temperatureMin)&&m.temperatureMax>=m.temperatureMin&&(m.precipitationAmount===undefined||(Number.isFinite(m.precipitationAmount)&&m.precipitationAmount>=0))&&(m.precipitationDays===undefined||(Number.isFinite(m.precipitationDays)&&m.precipitationDays>=0&&m.precipitationDays<=31)));
 }
 
-export function MonthlyAverages({place,source,prefs,refreshId}:Props){
- return <MonthlyAveragesForPlace key={`${source}:${place.latitude}:${place.longitude}:${place.timezone}`} place={place} source={source} prefs={prefs} refreshId={refreshId}/>;
+export function MonthlyAverages({place,prefs,refreshId}:Props){
+ return <MonthlyAveragesForPlace key={`${place.latitude}:${place.longitude}:${place.timezone}`} place={place} prefs={prefs} refreshId={refreshId}/>;
 }
 
-function MonthlyAveragesForPlace({place,source,prefs,refreshId}:Props){
+function MonthlyAveragesForPlace({place,prefs,refreshId}:Props){
  const [month,setMonth]=useState(()=>localMonth(place.timezone));
  const [retry,setRetry]=useState(0);
  const [load,setLoad]=useState<LoadState>({key:'',status:'loading'});
  const[refreshing,setRefreshing]=useState(false),[refreshFailed,setRefreshFailed]=useState(false);
  const graph=useRef<SVGSVGElement>(null),retryButton=useRef<HTMLButtonElement>(null),retryFocus=useRef(false),headingId=useId(),helpId=useId();
- const key=`${source}:${place.latitude}:${place.longitude}`;
+ const key=`${place.latitude}:${place.longitude}`;
  useEffect(()=>{
-  if(source==='reference'||!refreshId)return;
+  if(!refreshId)return;
   setRefreshing(true);setRefreshFailed(false);
   const controller=new AbortController();let active=true,timedOut=false;
   const timer=setTimeout(()=>{timedOut=true;controller.abort();},20000);
@@ -52,15 +48,15 @@ function MonthlyAveragesForPlace({place,source,prefs,refreshId}:Props){
   }
   request();
   return()=>{active=false;clearTimeout(timer);controller.abort();};
- },[key,place.latitude,place.longitude,retry,source,refreshId]);
+ },[key,place.latitude,place.longitude,retry,refreshId]);
  useEffect(()=>{
   if(!retryFocus.current||load.status==='loading'||refreshing)return;
   if(load.status==='error')retryButton.current?.focus();
   else graph.current?.querySelector<SVGRectElement>('[aria-pressed="true"]')?.focus();
   retryFocus.current=false;
  },[load.status,refreshing]);
- const months=source==='reference'?referenceMonths:load.key===key&&load.status==='ready'?load.data?.months:undefined;
- const loading=source==='weatherkit'&&(load.key!==key||load.status==='loading');
+ const months=load.key===key&&load.status==='ready'?load.data?.months:undefined;
+ const loading=load.key!==key||load.status==='loading';
  const temperature=(value:number)=>Math.round(prefs.unit==='F'?value*9/5+32:value);
  const rainfall=(value:number)=>`${(prefs.rain==='in'?value/25.4:value).toFixed(prefs.rain==='in'?2:1)} ${prefs.rain}`;
  const rainfallSpoken=(value:number)=>`${(prefs.rain==='in'?value/25.4:value).toFixed(prefs.rain==='in'?2:1)} ${prefs.rain==='in'?'inches':'millimeters'}`;
@@ -83,7 +79,7 @@ function MonthlyAveragesForPlace({place,source,prefs,refreshId}:Props){
  };
  return <section className="monthly-section" aria-labelledby={headingId} aria-busy={loading||refreshing}>
   <h2 id={headingId}>Monthly Averages</h2>
-  <p className="monthly-place">{source==='reference'?'Austin, TX · Original reference':place.name}</p>
+  <p className="monthly-place">{place.name}</p>
   {loading?<p className="monthly-status" role="status">Loading monthly averages…</p>:!months?<div className="monthly-status"><p role="alert">Couldn’t load monthly averages.</p><button ref={retryButton} className="text-button" onClick={event=>{retryFocus.current=event.detail===0;setLoad({key,status:'loading'});setRetry(value=>value+1);}}>Try again</button></div>:<>
    <p className="monthly-keyboard-help" id={helpId}>Use the left and right arrow keys to select a month. Home selects January and End selects December.</p>
    <div className="monthly-chart"><svg ref={graph} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`Monthly average ${hasRain?'temperatures and precipitation':'high and low temperatures'}`} aria-describedby={helpId}>

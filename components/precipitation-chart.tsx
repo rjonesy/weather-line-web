@@ -4,10 +4,10 @@ import {curve} from '@/lib/curve';
 import {precipitationPoints} from '@/lib/precipitation-graph';
 import type {Forecast} from '@/lib/weather';
 
-export function PrecipitationChart({minutes,source}:{minutes:Forecast['minutes'];source:Forecast['source']}){
+export function PrecipitationChart({minutes}:{minutes:Forecast['minutes']}){
  const graph=useRef<HTMLDivElement>(null),[width,setWidth]=useState(360),clipId=`rain-${useId().replace(/:/g,'')}`;
- useLayoutEffect(()=>{const element=graph.current;if(!element)return;const measure=()=>setWidth(element.clientWidth);measure();const observer=new ResizeObserver(measure);observer.observe(element);return()=>observer.disconnect();},[minutes,source]);
- const samples=precipitationPoints(minutes),available=source==='reference'||samples.length>0;
+ useLayoutEffect(()=>{const element=graph.current;if(!element)return;const measure=()=>setWidth(element.clientWidth);measure();const observer=new ResizeObserver(measure);observer.observe(element);return()=>observer.disconnect();},[minutes]);
+ const samples=precipitationPoints(minutes),available=samples.length>0;
  const height=150,left=60,right=Math.max(left+1,width-12),x=(minute:number)=>left+minute/60*(right-left);
  const points=samples.map(s=>({x:x(s.minute),y:height-s.height*height}));
  const path=points.length?`${curve(points)} L ${points.at(-1)!.x} ${height} L ${points[0].x} ${height} Z`:'';

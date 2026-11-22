@@ -168,6 +168,17 @@ test('reference/malformed provider payloads and malformed caches cannot become l
  }
 });
 
+test('removed demo forecasts cannot return through legacy or coordinate-keyed offline caches',async()=>{
+ for(const kind of ['legacy','envelope']){
+  const storage=new MemoryStorage(),demo={...fixture(),source:'reference'};
+  if(kind==='legacy')storage.setItem('wl-cache-austin',JSON.stringify(demo));
+  else storage.setItem('wl-city-forecast-v1:austin',JSON.stringify({version:1,placeKey:placeForecastKey(city),forecast:demo}));
+  const load=createCityForecastLoader({apiUrl,storage,fetch:async()=>{throw Error('offline');}});
+  await assert.rejects(load(city),/offline/);
+  if(kind==='legacy')assert.equal(storage.getItem('wl-city-forecast-v1:austin'),null);
+ }
+});
+
 test('HTTP error details survive and the timeout aborts only the shared request',async()=>{
  const denied=createCityForecastLoader({apiUrl,storage:null,fetch:async()=>Response.json({error:'Weather is unavailable here.'},{status:429})});
  await assert.rejects(denied(city),/Weather is unavailable here/);

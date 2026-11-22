@@ -203,7 +203,7 @@ components:
 
 The existing Weather Line interface is the visual authority. Preserve its quiet neutral surfaces, compact system typography, condition-colored temperature lines, original weather icons, and rounded forecast sheet. The local v2.8 captures, July 2020 unframed screens, and April 2021 SVG assets define the direction; this record documents the implemented recreation rather than proposing a new identity.
 
-The app stays a narrow, direct forecast tool on every screen size. Weather carries the color; controls use a separate accent. The New York forecast and Austin monthly view are explicitly labeled design previews. The dated reference forecast is never presented as live weather; live Apple Weather forecasts require WeatherKit credentials, and monthly climate data is a separate dependency.
+The app stays a narrow, direct forecast tool on every screen size. Weather carries the color; controls use a separate accent. Forecasts and monthly climate values come from Apple WeatherKit. There is no demo or reference forecast mode. Genuine saved forecasts remain labeled saved; unavailable data keeps an explicit retry.
 
 **Key Characteristics:**
 
@@ -280,7 +280,7 @@ Hourly/Daily uses a (34px) track, maximum width (240px), and inset (2px). Select
 
 ### Forecast chart
 
-Daily viewBox is (420 by 330); ten reference days form (42-unit) columns. High points are centered; lows are staggered onto subsequent column boundaries, leaving nine low markers. Y starts at (65) and spans (180) over a range of at least (8°C). Cubic control points share each segment's midpoint x. Strokes are (2.2); high/low icons are (24/22) square. Weekday/date labels sit at y (299/320).
+Daily viewBox is (420 by 330); ten forecast days form (42-unit) columns. High points are centered; lows are staggered onto subsequent column boundaries, leaving nine low markers. Y starts at (65) and spans (180) over a range of at least (8°C). Cubic control points share each segment's midpoint x. Strokes are (2.2); high/low icons are (24/22) square. Weekday/date labels sit at y (299/320).
 
 The full-height selected column fades from transparent to sun at opacity (.18). Pointer press selects; primary-button dragging scrubs. A roving tab stop exposes the selected column. Enter/Space selects; Left/Right moves selection and focus and scrolls the target into view. The summary announces updates politely. Selection changes directly without animation.
 
@@ -300,7 +300,7 @@ Appearance uses a four-column grid with gaps (18px 10px). All seven choices have
 
 Austin monthly viewBox is (420 by 370), with twelve centers at x (17 + 35 × index), a (35-unit) selection strip, (2-unit) lines, and (5.5-unit) points. Sun/night lines sit above a rain-colored shape. All months accept keyboard focus and Enter/Space. The selected month and two aligned average values follow.
 
-Keep “Austin, TX · Original reference” and its historical-reference note. Keep “Reference forecast · July 18, 2020”; hourly also labels its illustrative, non-live status. WeatherKit responses instead show update time, Apple Weather attribution, and refresh; cached live data says Saved forecast. Loading/error states retain the sheet and provide centered status or retry/reference actions.
+Forecasts show update time, Apple Weather attribution, and refresh; cached real data says Saved forecast. Loading/error states retain the card and provide centered status or retry actions. No illustrative forecast or monthly data is shown.
 
 ## Do's and Don'ts
 
@@ -309,14 +309,14 @@ Keep “Austin, TX · Original reference” and its historical-reference note. K
 - **Do** preserve the original weather SVGs and their internal artwork.
 - **Do** keep condition text, chart segments, and current temperature synchronized with the selected weather and theme roles.
 - **Do** align each detail label and value on a shared baseline within the two-column grid.
-- **Do** keep visible reference labels on the illustrative New York forecast, illustrative hourly preview, and Austin monthly averages.
+- **Do** retain clear loading, unavailable, retry and saved-forecast states.
 - **Do** retain roving chart focus, keyboard selection, native modal focus behavior, safe-area spacing, and reduced-motion support.
 
 ### Don't:
 
 - **Don't** invent a replacement brand, display font, hero artwork, or desktop dashboard.
 - **Don't** restyle theme choices as new palettes or recolor the original SVG artwork.
-- **Don't** imply that reference values or monthly climate data come from a live WeatherKit forecast.
+- **Don't** label saved forecasts as fresh weather or historical monthly averages as upcoming forecasts.
 - **Don't** add radar or widgets to this recreation.
 - **Don't** animate forecast selection or add elevation beyond the implemented vocabulary.
 
