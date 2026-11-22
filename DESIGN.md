@@ -288,7 +288,7 @@ Hourly shows up to (72) hours in (54px) columns at (330px) height, with horizont
 
 ### Sheets, search, and settings
 
-Settings, Locations, and Monthly share a native modal dialog: bottom-aligned mobile, width `min(560px, 100%)`, max height (94dvh); vertically centered desktop, max height (85dvh). Content usually has (19px) side padding, bottom safe-area padding, minimum height (450px), and sticky navigation. Escape, backdrop, and Done/back/close dismiss it. Native modal focus containment and opener-focus restoration are retained.
+Settings and Locations use a full-height native modal card: width `min(560px, 100%)`, height/max-height 100dvh with a 100vh fallback, and inset 0. It fills the mobile viewport; wider displays keep the app column. The dialog is the single vertical scroll container, and its child sheet has min-height 100%. Side padding is at least 19px and respects horizontal safe areas; the sticky navigation header respects the top safe area, and the bottom retains safe-area padding. Done and Escape dismiss the card, with native focus containment and opener-focus restoration. Monthly averages remain inline in the forecast.
 
 Mobile entrance moves from (45px) below over (.25s), easing `cubic-bezier(.16,1,.3,1)`; desktop has no entrance animation. Loading spins linearly over (1s); switch track/thumb transition over (.2s). Reduced motion disables all animations and transitions.
 
