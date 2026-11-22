@@ -10,7 +10,7 @@ type FocusTarget={id:string;action:Action}|'add';
 const controlKey=(id:string,action:Action)=>JSON.stringify([id,action]);
 
 export function SavedLocationsSettings({locations,onRemove,onMove,onAdd}:Props){
- const headingId=useId(),noteId=useId();
+ const headingId=useId();
  const controls=useRef(new Map<string,HTMLButtonElement>()),addButton=useRef<HTMLButtonElement>(null),pendingFocus=useRef<FocusTarget|null>(null);
  const[announcement,setAnnouncement]=useState('');
  useLayoutEffect(()=>{
@@ -34,9 +34,8 @@ export function SavedLocationsSettings({locations,onRemove,onMove,onAdd}:Props){
  function register(id:string,action:Action,button:HTMLButtonElement|null){
   const key=controlKey(id,action);if(button)controls.current.set(key,button);else controls.current.delete(key);
  }
- return <section className="saved-locations-settings" aria-labelledby={headingId} aria-describedby={noteId}>
+ return <section className="saved-locations-settings" aria-labelledby={headingId}>
   <h2 id={headingId}>Saved Locations</h2>
-  <p className="saved-locations-note" id={noteId}>Order here matches your main screen.</p>
   {locations.length?<ol className="saved-locations-list" role="list">{locations.map((location,index)=><li key={location.id}>
    <div className="saved-locations-name"><strong>{location.name}</strong><span>{location.region}</span></div>
    <div className="saved-locations-actions">
