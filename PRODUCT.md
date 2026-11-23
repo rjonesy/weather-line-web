@@ -11,6 +11,8 @@ Recreate the final Weather Line app for mobile browsers, with particular fidelit
 ## Capabilities and Constraints
 Use Apple WeatherKit for live weather. Exclude widgets and weather radar. Preserve hourly and daily forecasts, forecast inspection, saved locations, settings, themes, and the monthly averages view. Use real Apple weather data only; there is no demo or reference forecast mode.
 
+Save each preference immediately when it changes. Feels Like, nighttime conditions, units and theme survive reloads and reopening. Restore existing saved settings without writing defaults over them; independent browser tabs must not overwrite unrelated choices or echo old preference snapshots.
+
 ## Brand Commitments
 The existing Weather Line interface is binding. The local v2.8 App Store screenshots, July 2020 unframed app captures, April 2021 weather SVGs, and original theme source are visual evidence. Photos albums were inspected; their references are older than the local asset archive.
 

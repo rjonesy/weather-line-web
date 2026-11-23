@@ -3,7 +3,8 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import {Check,ChevronRight,LocateFixed,MapPin,Plus,RefreshCw,Search,Settings,X} from 'lucide-react';
 import {DEFAULT_PLACE,forecastDayForHour,conditionColor,conditionName,type Day,type Forecast,type Place} from '@/lib/weather';
 import {WeatherSymbols,WeatherIcon} from '@/components/weather-icons';
-import {parsePreferences,parsePlaces,type Preferences as Prefs,type Theme} from '@/lib/preferences';
+import {parsePlaces,type Preferences as Prefs,type Theme} from '@/lib/preferences';
+import {createPreferenceStore,isPreferenceStorageKey} from '@/lib/preference-store';
 import {nightForecasts} from '@/lib/night-forecast';
 import {dailySummary} from '@/lib/daily-summary';
 import {createSelectionHaptics} from '@/lib/selection-haptics';
@@ -34,6 +35,7 @@ function percent(v:number|undefined){return v===undefined?'—':`${Math.round(v*
 export default function WeatherLine(){
  const[prefs,setPrefs]=useState<Prefs>(INITIAL),[hydrated,setHydrated]=useState(false),[view,setView]=useState<View>('daily'),[index,setIndex]=useState(0),[forecast,setForecast]=useState<Forecast|null>(null),[place,setPlace]=useState<Place>(DEFAULT_PLACE),[saved,setSaved]=useState<Place[]>([]),[panel,setPanel]=useState<'settings'|'locations'|null>(null),[collapsed,setCollapsed]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[isOffline,setIsOffline]=useState(false),[search,setSearch]=useState(''),[results,setResults]=useState<Place[]>([]),[searching,setSearching]=useState(false),[searchError,setSearchError]=useState(''),[geoBusy,setGeoBusy]=useState(false),[geoError,setGeoError]=useState('');
  const selectionFeedback=useRef<ReturnType<typeof createSelectionHaptics>|null>(null);if(!selectionFeedback.current)selectionFeedback.current=createSelectionHaptics({view:'daily',index:0});
+ const preferenceStore=useRef<ReturnType<typeof createPreferenceStore>|null>(null);if(!preferenceStore.current)preferenceStore.current=createPreferenceStore(INITIAL,()=>window.localStorage);
  const tileKeyboardFocus=useRef(false),mainScroll=useRef(0),returnToCity=useRef<string|null>(null),seedLocation=useRef(false),locationsReturn=useRef<'settings'|null>(null),previousPanel=useRef<'settings'|'locations'|null>(null);
  const[manualRefresh,setManualRefresh]=useState(0),[reloading,setReloading]=useState(false),[restoreScrollY,setRestoreScrollY]=useState<number|undefined>(undefined);
  const appReloading=useRef(false),pendingRestore=useRef<ReloadContext|null>(null);
@@ -53,10 +55,10 @@ export default function WeatherLine(){
  const summarySizes=useMemo(()=>forecast?[...new Set([...forecast.daily.map((d,i)=>dailySummary(prefs.nightConditions?{...d,overnightConditionCode:nights[i]?.complete?nights[i].conditionCode:undefined}:d,prefs.unit,prefs.feelsLike)),...forecast.hourly.slice(0,72).map(d=>conditionName(d.conditionCode))])]:[],[forecast,nights,prefs.nightConditions,prefs.unit,prefs.feelsLike]);
  const nightCoverage=!forecast?'Night data unavailable.':completeNights.length?`${isOffline?'Saved · ':''}${completeNights.length} nights available.`:'Night data unavailable.';
  const temp=(n:number|undefined)=>n===undefined?'—':`${Math.round(prefs.unit==='F'?n*9/5+32:n)}°`;
- const setPref=<K extends keyof Prefs>(key:K,value:Prefs[K])=>setPrefs(p=>({...p,[key]:value}));
+ const setPref=<K extends keyof Prefs>(key:K,value:Prefs[K])=>setPrefs(preferenceStore.current!.set(key,value));
  useEffect(()=>{
-  let storedPrefs:string|null=null,storedPlaces:string|null=null,migrated=false,pendingLocation=false;try{storedPrefs=localStorage.getItem('wl-preferences');}catch{}try{storedPlaces=localStorage.getItem('wl-places');}catch{}try{migrated=Boolean(localStorage.getItem('wl-defaults-v2'));}catch{}try{pendingLocation=localStorage.getItem('wl-location-startup-v1')==='pending';}catch{}
-  const p=parsePreferences(storedPrefs,INITIAL),locations=restoreSavedLocations(parsePlaces(storedPlaces,storedPlaces===null?[DEFAULT_PLACE]:[]));setPrefs({...p,theme:migrated?p.theme:'auto'});seedLocation.current=shouldSeedCurrentLocation(storedPlaces,locations,pendingLocation);persistLocationStartup(seedLocation.current);setSaved(locations);
+  let storedPlaces:string|null=null,pendingLocation=false;try{storedPlaces=localStorage.getItem('wl-places');}catch{}try{pendingLocation=localStorage.getItem('wl-location-startup-v1')==='pending';}catch{}
+  const locations=restoreSavedLocations(parsePlaces(storedPlaces,storedPlaces===null?[DEFAULT_PLACE]:[]));setPrefs(preferenceStore.current!.read());seedLocation.current=shouldSeedCurrentLocation(storedPlaces,locations,pendingLocation);persistLocationStartup(seedLocation.current);setSaved(locations);
   const context=consumeReloadContext(()=>window.sessionStorage);
   if(context?.pathname===window.location.pathname){
    const restoredPlace=locations.find(location=>location.id===context.placeId),restoredCollapsed=context.collapsed||!restoredPlace,restoredIndex=context.view==='daily'?Math.min(context.index,9):context.index;
@@ -65,11 +67,21 @@ export default function WeatherLine(){
    pendingRestore.current={...context,index:restoredIndex,collapsed:restoredCollapsed};setRestoreScrollY(!context.collapsed&&restoredCollapsed?context.mainScroll:context.scrollY);
   }
   try{const clean=cleanAppReloadUrl(window.location.href);if(clean!==window.location.href)window.history.replaceState(window.history.state,'',clean);}catch{}
-  try{localStorage.setItem('wl-defaults-v2','current-location-auto');}catch{}setHydrated(true);
+  setHydrated(true);
  },[]);
- useEffect(()=>{if(!hydrated)return;try{localStorage.setItem('wl-preferences',JSON.stringify(prefs));}catch{}},[prefs,hydrated]);
  useEffect(()=>{if(!hydrated)return;const serialized=JSON.stringify(saved),external=externalSavedSnapshot.current;externalSavedSnapshot.current=null;if(serialized===external)return;try{localStorage.setItem('wl-places',serialized);}catch{}},[saved,hydrated]);
- useEffect(()=>{const sync=(event:StorageEvent)=>{try{if(event.storageArea!==localStorage)return;}catch{return;}if(event.key==='wl-places'){clearLocationStartup();cancelLocation();const locations=restoreSavedLocations(parsePlaces(event.newValue,[]));externalSavedSnapshot.current=JSON.stringify(locations);setSaved(locations);}if(event.key==='wl-preferences')setPrefs(parsePreferences(event.newValue,INITIAL));};window.addEventListener('storage',sync);return()=>window.removeEventListener('storage',sync);},[]);
+ useEffect(()=>{
+  const restorePreferences=()=>setPrefs(preferenceStore.current!.read());
+  const visible=()=>{if(document.visibilityState==='visible')restorePreferences();};
+  const sync=(event:StorageEvent)=>{
+   try{if(event.storageArea!==localStorage)return;}catch{return;}
+   if(event.key==='wl-places'){clearLocationStartup();cancelLocation();const locations=restoreSavedLocations(parsePlaces(event.newValue,[]));externalSavedSnapshot.current=JSON.stringify(locations);setSaved(locations);}
+   if(isPreferenceStorageKey(event.key))restorePreferences();
+  };
+  window.addEventListener('storage',sync);window.addEventListener('focus',restorePreferences);window.addEventListener('pageshow',restorePreferences);document.addEventListener('visibilitychange',visible);
+  restorePreferences();
+  return()=>{window.removeEventListener('storage',sync);window.removeEventListener('focus',restorePreferences);window.removeEventListener('pageshow',restorePreferences);document.removeEventListener('visibilitychange',visible);};
+ },[]);
  useEffect(()=>{document.documentElement.dataset.theme=prefs.theme;},[prefs.theme]);
  useEffect(()=>{
   if(!hydrated||!refreshId||!gpsPlace||!gpsAddressKey){setAddress(null);return;}
