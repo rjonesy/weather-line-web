@@ -13,7 +13,8 @@ colors:
   sun: "#ff9700"
   rain: "#00a4e4"
   night: "#596e77"
-  wind: "#9c54d8"
+  wind: "#9b51e0"
+  hot: "#ff4f00"
   selection: "#e4f1f8"
   dark-background: "#101724"
   dark-surface: "#172131"
@@ -26,7 +27,7 @@ colors:
   dark-sun: "#ffcf6b"
   dark-rain: "#95ddf1"
   dark-night: "#8293ad"
-  dark-wind: "#bb9be3"
+  dark-wind: "#9b51e0"
   dark-selection: "#243955"
   black-background: "#000"
   black-surface: "#111"
@@ -39,7 +40,7 @@ colors:
   black-sun: "#bbb"
   black-rain: "#86bdda"
   black-night: "#737d8c"
-  black-wind: "#ad99cb"
+  black-wind: "#9b51e0"
   black-selection: "#242a2e"
   dracula-background: "#202544"
   dracula-surface: "#292f58"
@@ -52,7 +53,7 @@ colors:
   dracula-sun: "#ffe58e"
   dracula-rain: "#a1e3f4"
   dracula-night: "#969bcb"
-  dracula-wind: "#d0a3f9"
+  dracula-wind: "#9b51e0"
   dracula-selection: "#3d467d"
   solarized-background: "#142e38"
   solarized-surface: "#203e4c"
@@ -65,7 +66,7 @@ colors:
   solarized-sun: "#f0d777"
   solarized-rain: "#8fd4e4"
   solarized-night: "#9aafb4"
-  solarized-wind: "#a9a1d6"
+  solarized-wind: "#9b51e0"
   solarized-selection: "#335765"
   clear-sky-background: "#2361b0"
   clear-sky-surface: "#2c70c5"
@@ -78,7 +79,7 @@ colors:
   clear-sky-sun: "#ffdd71"
   clear-sky-rain: "#a0ddff"
   clear-sky-night: "#123f75"
-  clear-sky-wind: "#e6c2ff"
+  clear-sky-wind: "#9b51e0"
   clear-sky-selection: "#4188d7"
 typography:
   display:
@@ -222,7 +223,7 @@ Control accent colors actions, selected segments, links, carets, and focus outli
 
 ### Secondary
 
-Sun colors sunny temperature text and lines; rain colors wet conditions and precipitation; night colors the low track and overcast/night conditions; wind colors wind, fog, and haze. The condition resolver prioritizes rain, wind/fog, night/cloud/snow/sleet, then sun. Partly cloudy retains sun.
+Sun colors sunny conditions; rain colors wet conditions; slate colors ordinary night tracks; gray colors clouds and fog. Wind, snow, sleet, hail and ice use the original purple #9B51E0. Hot and severe-weather glyphs use the original red #FF4F00. These purple/red values are shared by icons, graph lines, labels, condition text and highlights in every theme, including overnight tracks. Partly cloudy retains sun.
 
 ### Neutral
 
@@ -341,3 +342,6 @@ Hourly and Daily render in measured pixel viewboxes with shared 175px compact an
 Both forecast summaries use 21px type, 1.3 line height and the same tracking. An invisible, aria-hidden sizing grid reserves the tallest available summary at the current width; the visible copy stays complete. Missing Feels Like notices use the same reservation when relevant. This keeps the details grid and following sections in place while changing range or selected point.
 
 The November 16 source comparison restores #FF9700 for Light sunny weather text. Normal graph temperatures use 14px semibold and the selected pair uses 18px semibold, following the archived native Theme definitions. The next-hour chart has three 50px intensity bands, original droplet artwork, a smoothed source-calibrated area and ten-minute labels. Monthly supporting copy is limited to the place; the long climate footnote is removed.
+
+
+The v2.8 English 3 screenshot confirms #9B51E0 in wind glyphs, lines and labels; English 2 confirms #FF4F00 in Hot glyphs, lines and labels. April 2021 frozen-weather SVGs use the same purple. Named wind/frozen conditions retain their category ahead of generic storm matching.

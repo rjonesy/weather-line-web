@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {curveSegments,curve,curveRuns} from '../lib/curve.ts';
-import {conditionIcon,conditionColor,isFrozenCondition} from '../lib/weather.ts';
+import {conditionIcon,conditionColor,isFrozenCondition,preservesConditionColorAtNight} from '../lib/weather.ts';
 
 test('Catmull–Rom passes through nodes with continuous interior derivatives',()=>{
   const points=[{x:0,y:40},{x:40,y:10},{x:80,y:25},{x:120,y:0},{x:160,y:35}];
@@ -46,9 +46,10 @@ test('frigid, blowing dust and unavailable conditions never acquire sunny graph 
 });
 
 test('all resolved frozen glyphs keep purple on daytime and overnight tracks',()=>{
- const cases=[['Snow','Snow'],['HeavySnow','Snow-Heavy'],['Blizzard','Snow-Heavy'],['Flurries','Snow'],['Sleet','Sleet'],['FreezingRain','Sleet'],['FreezingDrizzle','Sleet'],['WintryMix','Sleet'],['Hail','Hail'],['Frigid','Icy'],['Icy','Icy'],['Ice','Icy'],['Frost','Icy'],['IcePellets','Icy']] as const;
+ const cases=[['Snow','Snow'],['HeavySnow','Snow-Heavy'],['Blizzard','Snow-Heavy'],['Snowstorm','Snow-Heavy'],['BlowingSnow','Snow'],['MixedRainAndSnow','Snow'],['Flurries','Snow'],['Sleet','Sleet'],['FreezingRain','Sleet'],['FreezingDrizzle','Sleet'],['WintryMix','Sleet'],['Hail','Hail'],['Frigid','Icy'],['Icy','Icy'],['Ice','Icy'],['Frost','Icy'],['Frosty','Icy'],['IcePellets','Icy'],['Ice Pellets','Icy'],['IceStorm','Icy']] as const;
  for(const [code,icon] of cases){
   assert.equal(isFrozenCondition(code),true);
+  assert.equal(preservesConditionColorAtNight(code),true);
   for(const daylight of [true,false]){
    assert.equal(conditionIcon(code,daylight),icon);
    assert.equal(conditionColor(code,daylight),'var(--wind)');
@@ -59,9 +60,22 @@ test('all resolved frozen glyphs keep purple on daytime and overnight tracks',()
  }
 });
 
+test('wind and hot glyphs, labels and outgoing lines preserve their condition color overnight',()=>{
+ for(const [code,color] of [['Windy','wind'],['Breezy','wind'],['Windstorm','wind'],['Hot','hot'],['HotSunny','hot'],['Hurricane','hot'],['Tornado','hot']] as const){
+  assert.equal(preservesConditionColorAtNight(code),true);
+  for(const daylight of [true,false]){
+   for(const nightTrack of [true,false]){
+    assert.equal(conditionColor(code,daylight,false,nightTrack),`var(--${color})`);
+    assert.equal(conditionColor(code,daylight,true,nightTrack),`var(--${color}-ink)`);
+   }
+  }
+ }
+});
+
 test('ordinary overnight-track glyphs and lines stay slate without retinting actual daytime sun',()=>{
- for(const code of ['Clear','Sunny','Rain','Windy','Unknown','NotAvailable','Cloudy','Hot','Hurricane']){
+ for(const code of ['Clear','Sunny','Rain','Unknown','NotAvailable','Cloudy']){
   assert.equal(isFrozenCondition(code),false);
+  assert.equal(preservesConditionColorAtNight(code),false);
   for(const daylight of [true,false]){
    assert.equal(conditionColor(code,daylight,false,true),'var(--night)');
    assert.equal(conditionColor(code,daylight,true,true),'var(--night-ink)');
