@@ -83,58 +83,58 @@ colors:
   clear-sky-selection: "#4188d7"
 typography:
   display:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "43px"
     fontWeight: 500
     letterSpacing: "-.035em"
   headline:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "25px"
     fontWeight: 600
     lineHeight: 1.12
     letterSpacing: "-.025em"
   title:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "23px"
     fontWeight: 600
     lineHeight: 1.15
     letterSpacing: "-.025em"
   body:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "16px"
     fontWeight: 400
   region:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "15px"
     fontWeight: 600
   control:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "16px"
     fontWeight: 600
     lineHeight: "28px"
   graph-temperature:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "14px"
     fontWeight: 600
   graph-temperature-selected:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "18px"
     fontWeight: 600
   graph-time:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "12px"
     fontWeight: 600
   graph-secondary:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
-    fontSize: "10px"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontSize: "11px"
     fontWeight: 600
   detail-label:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
-    fontSize: "10px"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.3
   detail-value:
-    fontFamily: "-apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
+    fontFamily: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif"
     fontSize: "13px"
     fontWeight: 600
 rounded:
@@ -202,7 +202,7 @@ components:
 
 **Creative North Star: "Weather Line, as shipped"**
 
-The existing Weather Line interface is the visual authority. Preserve its quiet neutral surfaces, compact system typography, condition-colored temperature lines, original weather icons, and rounded forecast sheet. The local v2.8 captures, July 2020 unframed screens, and April 2021 SVG assets define the direction; this record documents the implemented recreation rather than proposing a new identity.
+The existing Weather Line interface is the visual authority. Preserve its quiet neutral surfaces, compact SF Rounded typography, condition-colored temperature lines, original weather icons, and rounded forecast sheet. The local v2.8 captures, July 2020 unframed screens, and April 2021 SVG assets define the direction; this record documents the implemented recreation rather than proposing a new identity.
 
 The app stays a narrow, direct forecast tool on every screen size. Weather carries the color; controls use a separate accent. Forecasts and monthly climate values come from Apple WeatherKit. There is no demo or reference forecast mode. Genuine saved forecasts remain labeled saved; unavailable data keeps an explicit retry.
 
@@ -345,3 +345,6 @@ The November 16 source comparison restores #FF9700 for Light sunny weather text.
 
 
 The v2.8 English 3 screenshot confirms #9B51E0 in wind glyphs, lines and labels; English 2 confirms #FF4F00 in Hot glyphs, lines and labels. April 2021 frozen-weather SVGs use the same purple. Named wind/frozen conditions retain their category ahead of generic storm matching.
+
+
+Typography uses the native SF Rounded system face through `ui-rounded`, with SF Pro Rounded and system sans-serif fallbacks; Apple font files are not bundled. Body text, controls, labels and SVG graph temperatures share `--font-ui`. Weather detail labels (including Actual Temp) are 12px, 11px at widths up to 360px, and 13px on desktop. The graph date/AM–PM row is 11px. These labels are one logical point larger; temperature values and the primary weekday/hour row retain their existing sizes. [Apple native font guidance](https://developer.apple.com/documentation/technologyoverviews/managing-the-fonts-for-your-app).
